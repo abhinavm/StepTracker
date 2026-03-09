@@ -166,13 +166,25 @@ class HealthKitManager: ObservableObject {
     // MARK: - Background observer
 
     func startObserving() {
-        let query = HKObserverQuery(sampleType: stepsType, predicate: nil) { [weak self] _, _, error in
-            guard error == nil else { return }
-            Task { await self?.fetchAllData() }
+        // IMPORTANT: the completionHandler MUST be called after processing,
+        // otherwise HealthKit throttles or stops waking the app in the background.
+        let query = HKObserverQuery(sampleType: stepsType, predicate: nil) { [weak self] _, completionHandler, error in
+            guard error == nil else {
+                completionHandler() // always call, even on error
+                return
+            }
+            Task {
+                await self?.fetchAllData()
+                completionHandler() // tell HealthKit we're done — keeps background delivery alive
+            }
         }
         healthStore.execute(query)
 
-        // Enable background delivery (requires Background Modes capability)
-        healthStore.enableBackgroundDelivery(for: stepsType, frequency: .immediate) { _, _ in }
+        // Request immediate background delivery whenever new step data arrives
+        healthStore.enableBackgroundDelivery(for: stepsType, frequency: .immediate) { success, error in
+            if let error = error {
+                print("Background delivery error: \(error.localizedDescription)")
+            }
+        }
     }
 }
