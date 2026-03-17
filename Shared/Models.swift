@@ -89,14 +89,16 @@ struct StepData: Codable, Equatable {
 extension UserDefaults {
     static let appGroup = UserDefaults(suiteName: "group.com.abhinav.steptracker")!
 
-    var appColorPreset: ColorPreset {
-        get { ColorPreset(rawValue: string(forKey: "appColorPreset") ?? "") ?? .ocean }
-        set { set(newValue.rawValue, forKey: "appColorPreset") }
+    /// Hue value 0.0–1.0. Default 0.62 (blue).
+    var appColorHue: Double {
+        get { object(forKey: "appColorHue") as? Double ?? 0.62 }
+        set { set(newValue, forKey: "appColorHue") }
     }
 
-    var widgetColorPreset: ColorPreset {
-        get { ColorPreset(rawValue: string(forKey: "widgetColorPreset") ?? "") ?? .ocean }
-        set { set(newValue.rawValue, forKey: "widgetColorPreset") }
+    /// Hue value 0.0–1.0. Default 0.62 (blue).
+    var widgetColorHue: Double {
+        get { object(forKey: "widgetColorHue") as? Double ?? 0.62 }
+        set { set(newValue, forKey: "widgetColorHue") }
     }
 
     var stepData: StepData {
@@ -113,4 +115,17 @@ extension UserDefaults {
             }
         }
     }
+}
+
+// MARK: - Gradient color helper (used by both app and widget)
+
+/// Derives a two-stop gradient from a hue value (0.0 – 1.0).
+/// The start is bright/light; the end is darker and slightly shifted in hue.
+func gradientColors(fromHue hue: Double) -> [Color] {
+    let h = max(0.0, min(1.0, hue))
+    let endHue = (h + 0.10).truncatingRemainder(dividingBy: 1.0)
+    return [
+        Color(hue: h,      saturation: 0.68, brightness: 0.96),
+        Color(hue: endHue, saturation: 0.95, brightness: 0.62)
+    ]
 }

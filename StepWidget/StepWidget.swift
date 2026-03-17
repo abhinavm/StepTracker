@@ -46,7 +46,7 @@ struct StepWidgetEntryView: View {
     let entry: StepEntry
 
     var gradientColors: [Color] {
-        UserDefaults.appGroup.widgetColorPreset.gradientColors
+        gradientColors(fromHue: UserDefaults.appGroup.widgetColorHue)
     }
 
     var body: some View {

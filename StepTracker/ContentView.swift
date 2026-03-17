@@ -5,8 +5,8 @@ struct ContentView: View {
     @EnvironmentObject var healthKit: HealthKitManager
     @State private var showGoalPicker = false
     @State private var goalInput: String = ""
-    @State private var appPreset: ColorPreset = UserDefaults.appGroup.appColorPreset
-    @State private var widgetPreset: ColorPreset = UserDefaults.appGroup.widgetColorPreset
+    @State private var appHue: Double = UserDefaults.appGroup.appColorHue
+    @State private var widgetHue: Double = UserDefaults.appGroup.widgetColorHue
 
     var body: some View {
         NavigationStack {
@@ -61,7 +61,7 @@ struct ContentView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 24)
                 .fill(LinearGradient(
-                    colors: appPreset.gradientColors,
+                    colors: gradientColors(fromHue: appHue),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -111,7 +111,7 @@ struct ContentView: View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(appPreset.accentColor)
+                .foregroundStyle(Color(hue: appHue, saturation: 0.75, brightness: 0.85))
             Text(value)
                 .font(.headline)
                 .fontWeight(.bold)
@@ -174,10 +174,10 @@ struct ContentView: View {
             Text("\(healthKit.stepData.stepGoal) steps")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundStyle(appPreset.accentColor)
+                .foregroundStyle(Color(hue: appHue, saturation: 0.75, brightness: 0.85))
 
             ProgressView(value: healthKit.stepData.goalProgress)
-                .tint(appPreset.accentColor)
+                .tint(Color(hue: appHue, saturation: 0.75, brightness: 0.85))
         }
         .padding()
         .background(
@@ -195,33 +195,53 @@ struct ContentView: View {
     // MARK: - Appearance Card
 
     private var appearanceCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("Appearance")
                 .font(.headline)
 
-            // App color
+            // App gradient slider
             VStack(alignment: .leading, spacing: 10) {
-                Text("App")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                ColorSwatchRow(selected: $appPreset) { preset in
-                    appPreset = preset
-                    UserDefaults.appGroup.appColorPreset = preset
+                HStack {
+                    Text("App")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(LinearGradient(
+                            colors: gradientColors(fromHue: appHue),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        .frame(width: 44, height: 22)
                 }
+                GradientSlider(hue: $appHue)
+                    .onChange(of: appHue) { _, newVal in
+                        UserDefaults.appGroup.appColorHue = newVal
+                    }
             }
 
             Divider()
 
-            // Widget color
+            // Widget gradient slider
             VStack(alignment: .leading, spacing: 10) {
-                Text("Widget")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                ColorSwatchRow(selected: $widgetPreset) { preset in
-                    widgetPreset = preset
-                    UserDefaults.appGroup.widgetColorPreset = preset
-                    WidgetCenter.shared.reloadAllTimelines()
+                HStack {
+                    Text("Widget")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(LinearGradient(
+                            colors: gradientColors(fromHue: widgetHue),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        .frame(width: 44, height: 22)
                 }
+                GradientSlider(hue: $widgetHue)
+                    .onChange(of: widgetHue) { _, newVal in
+                        UserDefaults.appGroup.widgetColorHue = newVal
+                        WidgetCenter.shared.reloadAllTimelines()
+                    }
             }
         }
         .padding()
@@ -298,48 +318,52 @@ struct GoalPickerSheet: View {
     }
 }
 
-// MARK: - Color Swatch Row
+// MARK: - Gradient Slider
 
-struct ColorSwatchRow: View {
-    @Binding var selected: ColorPreset
-    let onSelect: (ColorPreset) -> Void
+struct GradientSlider: View {
+    @Binding var hue: Double
+
+    private let trackHeight: CGFloat = 36
+    private let thumbSize: CGFloat = 32
+
+    private var rainbowGradient: LinearGradient {
+        LinearGradient(
+            colors: (0...20).map { i in
+                Color(hue: Double(i) / 20.0, saturation: 0.80, brightness: 0.92)
+            },
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(ColorPreset.allCases) { preset in
-                    Button {
-                        onSelect(preset)
-                    } label: {
-                        VStack(spacing: 6) {
-                            ZStack {
-                                Circle()
-                                    .fill(LinearGradient(
-                                        colors: preset.gradientColors,
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ))
-                                    .frame(width: 44, height: 44)
+        GeometryReader { geo in
+            let usableWidth = geo.size.width - thumbSize
+            let thumbX = hue * usableWidth
 
-                                if selected == preset {
-                                    Circle()
-                                        .strokeBorder(Color.primary, lineWidth: 2.5)
-                                        .frame(width: 50, height: 50)
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(.white)
-                                }
+            ZStack(alignment: .leading) {
+                // Rainbow track
+                RoundedRectangle(cornerRadius: trackHeight / 2)
+                    .fill(rainbowGradient)
+                    .frame(height: trackHeight)
+
+                // Thumb
+                Circle()
+                    .fill(Color(hue: hue, saturation: 0.75, brightness: 0.95))
+                    .frame(width: thumbSize, height: thumbSize)
+                    .overlay(Circle().strokeBorder(.white, lineWidth: 3))
+                    .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+                    .offset(x: thumbX)
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                let raw = (value.location.x - thumbSize / 2) / usableWidth
+                                hue = max(0.0, min(1.0, raw))
                             }
-                            Text(preset.displayName)
-                                .font(.caption2)
-                                .foregroundStyle(selected == preset ? .primary : .secondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
+                    )
             }
-            .padding(.vertical, 4)
         }
+        .frame(height: thumbSize)
     }
 }
 
