@@ -21,22 +21,27 @@ A clean, native iOS step counter app built with SwiftUI, HealthKit, and WidgetKi
 
 ## Screenshots
 
+<div align="center">
+
 ### App
 
-<p float="left">
-  <img src="screenshots/app_main.PNG" width="200"/>
-  <img src="screenshots/app_weekly.PNG" width="200"/>
-  <img src="screenshots/app_goal.PNG" width="200"/>
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/app_main.PNG" width="220"/><br/><sub><b>Step Counter & Goal Ring</b></sub></td>
+    <td align="center"><img src="screenshots/app_goal.PNG" width="220"/><br/><sub><b>Colour Theme Picker</b></sub></td>
+  </tr>
+</table>
 
 ### Widgets
 
-<p float="left">
-  <img src="screenshots/widget_small.PNG" width="160"/>
-  <img src="screenshots/widget_medium.PNG" width="320"/>
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/widget_small.PNG" width="160"/><br/><sub><b>Small Widget</b></sub></td>
+    <td align="center"><img src="screenshots/widget_medium.PNG" width="320"/><br/><sub><b>Medium Widget</b></sub></td>
+  </tr>
+</table>
 
-> **To add screenshots:** create a `screenshots/` folder in the repo root, take screenshots on your iPhone (side button + volume up), and drop them in.
+</div>
 
 ---
 
