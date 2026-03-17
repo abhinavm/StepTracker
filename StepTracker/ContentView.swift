@@ -1,9 +1,12 @@
 import SwiftUI
+import WidgetKit
 
 struct ContentView: View {
     @EnvironmentObject var healthKit: HealthKitManager
     @State private var showGoalPicker = false
     @State private var goalInput: String = ""
+    @State private var appPreset: ColorPreset = UserDefaults.appGroup.appColorPreset
+    @State private var widgetPreset: ColorPreset = UserDefaults.appGroup.widgetColorPreset
 
     var body: some View {
         NavigationStack {
@@ -21,6 +24,9 @@ struct ContentView: View {
 
                     // MARK: - Goal Setting
                     goalCard
+
+                    // MARK: - Appearance
+                    appearanceCard
                 }
                 .padding()
             }
@@ -55,9 +61,7 @@ struct ContentView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 24)
                 .fill(LinearGradient(
-                    colors: healthKit.stepData.goalReached
-                        ? [Color.green, Color.mint]
-                        : [Color.blue, Color.indigo],
+                    colors: appPreset.gradientColors,
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -107,7 +111,7 @@ struct ContentView: View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(.blue)
+                .foregroundStyle(appPreset.accentColor)
             Text(value)
                 .font(.headline)
                 .fontWeight(.bold)
@@ -170,10 +174,10 @@ struct ContentView: View {
             Text("\(healthKit.stepData.stepGoal) steps")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundStyle(.blue)
+                .foregroundStyle(appPreset.accentColor)
 
             ProgressView(value: healthKit.stepData.goalProgress)
-                .tint(healthKit.stepData.goalReached ? .green : .blue)
+                .tint(appPreset.accentColor)
         }
         .padding()
         .background(
@@ -186,6 +190,45 @@ struct ContentView: View {
             }
             .presentationDetents([.height(240)])
         }
+    }
+
+    // MARK: - Appearance Card
+
+    private var appearanceCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Appearance")
+                .font(.headline)
+
+            // App color
+            VStack(alignment: .leading, spacing: 10) {
+                Text("App")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                ColorSwatchRow(selected: $appPreset) { preset in
+                    appPreset = preset
+                    UserDefaults.appGroup.appColorPreset = preset
+                }
+            }
+
+            Divider()
+
+            // Widget color
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Widget")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                ColorSwatchRow(selected: $widgetPreset) { preset in
+                    widgetPreset = preset
+                    UserDefaults.appGroup.widgetColorPreset = preset
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.regularMaterial)
+        )
     }
 
     private var lastUpdatedString: String {
@@ -251,6 +294,51 @@ struct GoalPickerSheet: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Color Swatch Row
+
+struct ColorSwatchRow: View {
+    @Binding var selected: ColorPreset
+    let onSelect: (ColorPreset) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(ColorPreset.allCases) { preset in
+                    Button {
+                        onSelect(preset)
+                    } label: {
+                        VStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .fill(LinearGradient(
+                                        colors: preset.gradientColors,
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 44, height: 44)
+
+                                if selected == preset {
+                                    Circle()
+                                        .strokeBorder(Color.primary, lineWidth: 2.5)
+                                        .frame(width: 50, height: 50)
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundStyle(.white)
+                                }
+                            }
+                            Text(preset.displayName)
+                                .font(.caption2)
+                                .foregroundStyle(selected == preset ? .primary : .secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 4)
         }
     }
 }

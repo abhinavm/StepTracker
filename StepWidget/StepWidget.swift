@@ -46,9 +46,7 @@ struct StepWidgetEntryView: View {
     let entry: StepEntry
 
     var gradientColors: [Color] {
-        entry.stepData.goalReached
-            ? [Color(red: 0.1, green: 0.7, blue: 0.4), Color(red: 0.0, green: 0.5, blue: 0.3)]
-            : [Color(red: 0.1, green: 0.4, blue: 0.9), Color(red: 0.3, green: 0.0, blue: 0.7)]
+        UserDefaults.appGroup.widgetColorPreset.gradientColors
     }
 
     var body: some View {
