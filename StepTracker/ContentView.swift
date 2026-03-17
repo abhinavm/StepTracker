@@ -215,7 +215,7 @@ struct ContentView: View {
                         .frame(width: 44, height: 22)
                 }
                 GradientSlider(hue: $appHue)
-                    .onChange(of: appHue) { _, newVal in
+                    .onChange(of: appHue) { newVal in
                         UserDefaults.appGroup.appColorHue = newVal
                     }
             }
@@ -238,7 +238,7 @@ struct ContentView: View {
                         .frame(width: 44, height: 22)
                 }
                 GradientSlider(hue: $widgetHue)
-                    .onChange(of: widgetHue) { _, newVal in
+                    .onChange(of: widgetHue) { newVal in
                         UserDefaults.appGroup.widgetColorHue = newVal
                         WidgetCenter.shared.reloadAllTimelines()
                     }
@@ -347,21 +347,26 @@ struct GradientSlider: View {
                     .fill(rainbowGradient)
                     .frame(height: trackHeight)
 
-                // Thumb
+                // Thumb — purely visual, gesture is on the whole ZStack
                 Circle()
                     .fill(Color(hue: hue, saturation: 0.75, brightness: 0.95))
                     .frame(width: thumbSize, height: thumbSize)
                     .overlay(Circle().strokeBorder(.white, lineWidth: 3))
                     .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
                     .offset(x: thumbX)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                let raw = (value.location.x - thumbSize / 2) / usableWidth
-                                hue = max(0.0, min(1.0, raw))
-                            }
-                    )
+                    .allowsHitTesting(false) // gesture handled by parent ZStack
             }
+            // Gesture on the full track so tapping anywhere works correctly
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        guard usableWidth > 0 else { return }
+                        // Offset by half thumb so thumb centre tracks the finger
+                        let raw = (value.location.x - thumbSize / 2) / usableWidth
+                        hue = max(0.0, min(1.0, raw))
+                    }
+            )
         }
         .frame(height: thumbSize)
     }
