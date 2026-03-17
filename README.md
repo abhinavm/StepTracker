@@ -28,7 +28,6 @@ A clean, native iOS step counter app built with SwiftUI, HealthKit, and WidgetKi
 <table>
   <tr>
     <td align="center"><img src="screenshots/app_main.PNG" width="220"/><br/><sub><b>Step Counter & Goal Ring</b></sub></td>
-    <td align="center"><img src="screenshots/app_goal.PNG" width="220"/><br/><sub><b>Colour Theme Picker</b></sub></td>
   </tr>
 </table>
 
