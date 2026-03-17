@@ -45,7 +45,7 @@ struct StepWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     let entry: StepEntry
 
-    var gradientColors: [Color] {
+    var widgetGradientColors: [Color] {
         gradientColors(fromHue: UserDefaults.appGroup.widgetColorHue)
     }
 
@@ -64,7 +64,7 @@ struct StepWidgetEntryView: View {
                 SmallWidgetView(entry: entry)
             }
         }
-        .modifier(GradientBackgroundModifier(colors: gradientColors))
+        .modifier(GradientBackgroundModifier(colors: widgetGradientColors))
     }
 }
 
